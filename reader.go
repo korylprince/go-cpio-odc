@@ -171,13 +171,9 @@ func statFile(fi fs.FileInfo) *File {
 	switch info := fi.Sys().(type) {
 	// on unix
 	case *syscall.Stat_t:
-		return &File{
-			Device: info.Dev, Inode: info.Ino,
-			FileMode: fi.Mode(),
-			UID:      uint64(info.Uid), GID: uint64(info.Gid),
-			NLink: info.Nlink, RDev: info.Rdev,
-			ModifiedTime: time.Unix(info.Mtim.Sec, info.Mtim.Nsec),
-		}
+		f := statToFile(info)
+		f.FileMode = fi.Mode()
+		return f
 
 	// cpioception
 	case *File:
