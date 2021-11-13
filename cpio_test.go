@@ -7,7 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
+	"path"
 	"reflect"
 	"strings"
 	"testing"
@@ -169,7 +169,7 @@ func TestWriteFS(t *testing.T) {
 	}
 	buf = new(bytes.Buffer)
 	cmd := exec.Command(cpiopath, "-c", "-o")
-	cmd.Dir = filepath.Join(cwd, "testdata")
+	cmd.Dir = path.Join(cwd, "testdata")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		t.Fatalf("could not get stdin: %v", err)
@@ -254,17 +254,17 @@ func TestFS(t *testing.T) {
 		t.Fatalf("could not read fs archive: %v", err)
 	}
 
-	for path, file1 := range wantFiles {
-		clean := filepath.Clean(path)
+	for fp, file1 := range wantFiles {
+		clean := path.Clean(fp)
 		if len(clean) > 0 && clean[0] == '/' {
 			clean = clean[1:]
 		}
 		if file2, ok := haveFiles[clean]; !ok {
-			t.Errorf("expected to find %s", path)
+			t.Errorf("expected to find %s", fp)
 		} else {
 			file1.Path = clean
 			if !reflect.DeepEqual(file1, file2) {
-				t.Errorf("expected %s to be equal:", path)
+				t.Errorf("expected %s to be equal:", fp)
 			}
 		}
 	}

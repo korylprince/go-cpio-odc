@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"path/filepath"
+	"path"
 	"time"
 )
 
 func (f *File) Name() string {
-	return filepath.Base(f.Path)
+	return path.Base(f.Path)
 }
 
 func (f *File) Size() int64 {
@@ -61,14 +61,14 @@ type DirFile struct {
 
 // ReadDir implements the ReadDirFile interface
 func (f *DirFile) ReadDir(n int) ([]fs.DirEntry, error) {
-	clean := filepath.Clean(f.Path)
+	clean := path.Clean(f.Path)
 	if len(clean) > 0 && clean[0] == '/' {
 		clean = clean[1:]
 	}
 	if f.entries == nil {
 		var entries []fs.DirEntry
 		for p, file := range f.fs.files {
-			if clean != p && filepath.Dir(p) == clean {
+			if clean != p && path.Dir(p) == clean {
 				entries = append(entries, file.(fs.DirEntry))
 			}
 		}
@@ -110,11 +110,11 @@ func NewFS(r io.Reader) (fs.FS, error) {
 	dirs := make(map[string]struct{})
 
 	for f, err = rdr.Next(); err == nil; f, err = rdr.Next() {
-		clean := filepath.Clean(f.Path)
+		clean := path.Clean(f.Path)
 		if len(clean) > 0 && clean[0] == '/' {
 			clean = clean[1:]
 		}
-		for dir := filepath.Dir(clean); dir != "."; dir = filepath.Dir(dir) {
+		for dir := path.Dir(clean); dir != "."; dir = path.Dir(dir) {
 			dirs[dir] = struct{}{}
 		}
 		if f.IsDir() {
