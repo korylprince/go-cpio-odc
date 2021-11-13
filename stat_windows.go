@@ -1,26 +1,12 @@
-//go:build !(darwin || windows)
-
 package cpio
 
 import (
 	"io/fs"
-	"syscall"
-	"time"
 )
 
 // statFile builds a *File with the information available in fi. The caller is responsible for filling in the body
 func statFile(fi fs.FileInfo) *File {
 	switch info := fi.Sys().(type) {
-	// on unix
-	case *syscall.Stat_t:
-		return &File{
-			Device: uint64(info.Dev), Inode: info.Ino,
-			FileMode: fi.Mode(),
-			UID:      uint64(info.Uid), GID: uint64(info.Gid),
-			NLink: uint64(info.Nlink), RDev: uint64(info.Rdev),
-			ModifiedTime: time.Unix(int64(info.Mtim.Sec), int64(info.Mtim.Nsec)),
-		}
-
 	// cpioception
 	case *File:
 		return &File{
@@ -41,7 +27,7 @@ func statFile(fi fs.FileInfo) *File {
 		}
 	}
 
-	// on generic fs.FS, see: https://www.mkssoftware.com/docs/man5/stat.5.asp
+	// on windows or generic fs.FS, see: https://www.mkssoftware.com/docs/man5/stat.5.asp
 	return &File{
 		Device: 0, Inode: 3,
 		FileMode: fi.Mode(),

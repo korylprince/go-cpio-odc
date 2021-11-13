@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
 	"strconv"
-	"syscall"
 	"time"
 )
 
@@ -164,45 +162,6 @@ func (r *Reader) Next() (*File, error) {
 	f.buf = bytes.NewBuffer(f.Body)
 
 	return f, nil
-}
-
-// statFile builds a *File with the information available in fi. The caller is responsible for filling in the body
-func statFile(fi fs.FileInfo) *File {
-	switch info := fi.Sys().(type) {
-	// on unix
-	case *syscall.Stat_t:
-		f := statToFile(info)
-		f.FileMode = fi.Mode()
-		return f
-
-	// cpioception
-	case *File:
-		return &File{
-			Device: info.Device, Inode: info.Inode,
-			FileMode: info.FileMode,
-			UID:      info.UID, GID: info.GID,
-			NLink: info.NLink, RDev: info.RDev,
-			ModifiedTime: info.ModifiedTime,
-		}
-
-	case *DirFile:
-		return &File{
-			Device: info.Device, Inode: info.Inode,
-			FileMode: info.FileMode,
-			UID:      info.UID, GID: info.GID,
-			NLink: info.NLink, RDev: info.RDev,
-			ModifiedTime: info.ModifiedTime,
-		}
-	}
-
-	// on windows or generic fs.FS, see: https://www.mkssoftware.com/docs/man5/stat.5.asp
-	return &File{
-		Device: 0, Inode: 3,
-		FileMode: fi.Mode(),
-		UID:      0, GID: 0,
-		NLink: 1, RDev: 0,
-		ModifiedTime: fi.ModTime(),
-	}
 }
 
 // ReadFile returns a *File for the given path. Where possible (on unix), it will use syscalls to get fields not available to os.Stat
