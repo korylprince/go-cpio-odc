@@ -30,7 +30,7 @@ func TestCPIO(t *testing.T) {
 		files = append(files, file)
 	}
 	if err == nil {
-		t.Errorf("expected archive error to be EOF: want: %v, have: %w", io.EOF, err)
+		t.Errorf("expected archive error to be EOF: want: %v, have: %v", io.EOF, err)
 	}
 	if err != nil && !errors.Is(err, io.EOF) {
 		t.Fatalf("could not read archive: %v", err)
@@ -209,7 +209,7 @@ func TestFS(t *testing.T) {
 		wantFiles[file.Path] = file
 	}
 	if err == nil {
-		t.Errorf("expected original archive error to be EOF: want: %v, have: %w", io.EOF, err)
+		t.Errorf("expected original archive error to be EOF: want: %v, have: %v", io.EOF, err)
 	}
 	if err != nil && !errors.Is(err, io.EOF) {
 		t.Fatalf("could not read original archive: %v", err)
@@ -231,7 +231,7 @@ func TestFS(t *testing.T) {
 		haveFiles[file.Path] = file
 	}
 	if err == nil {
-		t.Errorf("expected fs archive error to be EOF: want: %v, have: %w", io.EOF, err)
+		t.Errorf("expected fs archive error to be EOF: want: %v, have: %v", io.EOF, err)
 	}
 	if err != nil && !errors.Is(err, io.EOF) {
 		t.Fatalf("could not read fs archive: %v", err)
