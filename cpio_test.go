@@ -3,11 +3,13 @@ package cpio_test
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/korylprince/go-cpio-odc"
@@ -58,14 +60,31 @@ func TestCPIO(t *testing.T) {
 	}
 }
 
-func TestReadFile(t *testing.T) {
-	t.Parallel()
-
+func gnuCPIO() (string, error) {
 	// check for cpio command
 	cpiocmd, err := exec.LookPath("cpio")
 	if err != nil {
-		t.Skipf("could not find cpio executable: %v", err)
-		return
+		return "", fmt.Errorf("could not find cpio executable: %w", err)
+	}
+
+	output, err := exec.Command(cpiocmd, "--version").CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("could not get cpio version: %w", err)
+	}
+
+	if !strings.Contains(string(output), "GNU cpio") {
+		return "", errors.New("cpio is not GNU version")
+	}
+
+	return cpiocmd, nil
+}
+
+func TestReadFile(t *testing.T) {
+	t.Parallel()
+
+	cpiopath, err := gnuCPIO()
+	if err != nil {
+		t.Skip(err)
 	}
 
 	// generate our version
@@ -86,7 +105,7 @@ func TestReadFile(t *testing.T) {
 
 	// generate their version
 	buf = new(bytes.Buffer)
-	cmd := exec.Command(cpiocmd, "-c", "-o")
+	cmd := exec.Command(cpiopath, "-c", "-o")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		t.Fatalf("could not get stdin: %v", err)
@@ -125,11 +144,9 @@ func TestReadFile(t *testing.T) {
 func TestWriteFS(t *testing.T) {
 	t.Parallel()
 
-	// check for cpio command
-	cpiocmd, err := exec.LookPath("cpio")
+	cpiopath, err := gnuCPIO()
 	if err != nil {
-		t.Skipf("could not find cpio executable: %v", err)
-		return
+		t.Skip(err)
 	}
 
 	// generate our version
@@ -151,7 +168,7 @@ func TestWriteFS(t *testing.T) {
 		t.Fatalf("could not get current working directory: %v", err)
 	}
 	buf = new(bytes.Buffer)
-	cmd := exec.Command(cpiocmd, "-c", "-o")
+	cmd := exec.Command(cpiopath, "-c", "-o")
 	cmd.Dir = filepath.Join(cwd, "testdata")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
