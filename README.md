@@ -13,7 +13,7 @@ If you have any issues or questions [create an issue](https://github.com/korylpr
 
 # Usage
 
-The library provides a `Reader` and `Writer`, as well as an `fs.FS` to browse the archive and a `Writer.WriteFS` method to write and entire `fs.FS` to the archive.
+The library provides a `Reader` and `Writer`, as well as an `fs.FS` to browse the archive and a `Writer.WriteFS` method to write an entire `fs.FS` to the archive.
 
 See examples on [pkg.go.dev](https://pkg.go.dev/github.com/korylprince/go-cpio-odc/#pkg-examples).
 
