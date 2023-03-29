@@ -6,7 +6,7 @@
 
 # Installing
 
-`go get github.com/korylprince/go-cpio-odc/v3`
+`go get github.com/korylprince/go-cpio-odc`
 
 If you have any issues or questions [create an issue](https://github.com/korylprince/go-cpio-odc/issues).
 
