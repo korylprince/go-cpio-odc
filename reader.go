@@ -9,15 +9,6 @@ import (
 	"time"
 )
 
-func read(r io.Reader, buf []byte, size int) error {
-	if n, err := r.Read(buf); err != nil {
-		return fmt.Errorf("could not read %d bytes: %w", size, err)
-	} else if n != size {
-		return fmt.Errorf("could not read: want: %d, have: %d", size, n)
-	}
-	return nil
-}
-
 type Reader struct {
 	r    io.Reader
 	buf  []byte
@@ -37,7 +28,7 @@ func (r *Reader) Next() (*File, error) {
 	var err error
 
 	// read magic
-	if err := read(r.r, r.buf, fieldSize); err != nil {
+	if _, err := io.ReadFull(r.r, r.buf); err != nil {
 		return nil, fmt.Errorf("could not read magic: %w", err)
 	}
 	if !bytes.Equal(r.buf, HeaderMagic) {
@@ -47,7 +38,7 @@ func (r *Reader) Next() (*File, error) {
 	f := &File{}
 
 	// read device
-	if err := read(r.r, r.buf, fieldSize); err != nil {
+	if _, err := io.ReadFull(r.r, r.buf); err != nil {
 		return nil, fmt.Errorf("could not read device: %w", err)
 	}
 	f.Device, err = strconv.ParseUint(string(r.buf), octalBits, 64)
@@ -56,7 +47,7 @@ func (r *Reader) Next() (*File, error) {
 	}
 
 	// read inode
-	if err := read(r.r, r.buf, fieldSize); err != nil {
+	if _, err := io.ReadFull(r.r, r.buf); err != nil {
 		return nil, fmt.Errorf("could not read inode: %w", err)
 	}
 	f.Inode, err = strconv.ParseUint(string(r.buf), octalBits, 64)
@@ -65,7 +56,7 @@ func (r *Reader) Next() (*File, error) {
 	}
 
 	// read mode
-	if err := read(r.r, r.buf, fieldSize); err != nil {
+	if _, err := io.ReadFull(r.r, r.buf); err != nil {
 		return nil, fmt.Errorf("could not read mode: %w", err)
 	}
 	mode, err := strconv.ParseUint(string(r.buf), octalBits, 64)
@@ -75,7 +66,7 @@ func (r *Reader) Next() (*File, error) {
 	f.FileMode = UnmarshalFileMode(mode)
 
 	// read uid
-	if err := read(r.r, r.buf, fieldSize); err != nil {
+	if _, err := io.ReadFull(r.r, r.buf); err != nil {
 		return nil, fmt.Errorf("could not read uid: %w", err)
 	}
 	f.UID, err = strconv.ParseUint(string(r.buf), octalBits, 64)
@@ -84,7 +75,7 @@ func (r *Reader) Next() (*File, error) {
 	}
 
 	// read gid
-	if err := read(r.r, r.buf, fieldSize); err != nil {
+	if _, err := io.ReadFull(r.r, r.buf); err != nil {
 		return nil, fmt.Errorf("could not read gid: %w", err)
 	}
 	f.GID, err = strconv.ParseUint(string(r.buf), octalBits, 64)
@@ -93,7 +84,7 @@ func (r *Reader) Next() (*File, error) {
 	}
 
 	// read link number
-	if err := read(r.r, r.buf, fieldSize); err != nil {
+	if _, err := io.ReadFull(r.r, r.buf); err != nil {
 		return nil, fmt.Errorf("could not read link number: %w", err)
 	}
 	f.NLink, err = strconv.ParseUint(string(r.buf), octalBits, 64)
@@ -102,7 +93,7 @@ func (r *Reader) Next() (*File, error) {
 	}
 
 	// read device number
-	if err := read(r.r, r.buf, fieldSize); err != nil {
+	if _, err := io.ReadFull(r.r, r.buf); err != nil {
 		return nil, fmt.Errorf("could not read device number: %w", err)
 	}
 	f.RDev, err = strconv.ParseUint(string(r.buf), octalBits, 64)
@@ -111,7 +102,7 @@ func (r *Reader) Next() (*File, error) {
 	}
 
 	// read modified time
-	if err := read(r.r, r.lbuf, largeFieldSize); err != nil {
+	if _, err := io.ReadFull(r.r, r.lbuf); err != nil {
 		return nil, fmt.Errorf("could not read modified time: %w", err)
 	}
 	modTime, err := strconv.ParseUint(string(r.lbuf), octalBits, 64)
@@ -121,7 +112,7 @@ func (r *Reader) Next() (*File, error) {
 	f.ModifiedTime = time.Unix(int64(modTime), 0)
 
 	// read path length
-	if err := read(r.r, r.buf, fieldSize); err != nil {
+	if _, err := io.ReadFull(r.r, r.buf); err != nil {
 		return nil, fmt.Errorf("could not read path length: %w", err)
 	}
 	plen, err := strconv.ParseUint(string(r.buf), octalBits, 64)
@@ -130,7 +121,7 @@ func (r *Reader) Next() (*File, error) {
 	}
 
 	// read body length
-	if err := read(r.r, r.lbuf, largeFieldSize); err != nil {
+	if _, err := io.ReadFull(r.r, r.lbuf); err != nil {
 		return nil, fmt.Errorf("could not read body length: %w", err)
 	}
 	blen, err := strconv.ParseUint(string(r.lbuf), octalBits, 64)
@@ -140,7 +131,7 @@ func (r *Reader) Next() (*File, error) {
 
 	// read path
 	pbuf := make([]byte, plen)
-	if err := read(r.r, pbuf, int(plen)); err != nil {
+	if _, err := io.ReadFull(r.r, pbuf); err != nil {
 		return nil, fmt.Errorf("could not read path: %w", err)
 	}
 	if pbuf[plen-1] != '\x00' {
@@ -155,7 +146,7 @@ func (r *Reader) Next() (*File, error) {
 
 	// read body
 	bbuf := make([]byte, blen)
-	if err := read(r.r, bbuf, int(blen)); err != nil {
+	if _, err := io.ReadFull(r.r, bbuf); err != nil {
 		return nil, fmt.Errorf("could not read body: %w", err)
 	}
 	f.Body = bbuf
